@@ -69,7 +69,7 @@ CAN_FilterTypeDef filterCAN;
 CAN_TxHeaderTypeDef txHeader;
 CAN_RxHeaderTypeDef rxHeader;
 
-uint32_t pTxMailbox = 0;
+uint32_t pTxMailbox;
 uint8_t txData[] = {0};
 uint8_t rxData[] = {0};
 /* USER CODE END PV */
@@ -120,9 +120,9 @@ int main(void)
 	filterCAN.FilterActivation = CAN_FILTER_ENABLE;
 	filterCAN.FilterBank = 0;
 	filterCAN.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-	filterCAN.FilterIdHigh = 1;
+	filterCAN.FilterIdHigh = 0;
 	filterCAN.FilterIdLow = 0;
-	filterCAN.FilterMaskIdHigh = 1;
+	filterCAN.FilterMaskIdHigh = 0;
 	filterCAN.FilterMaskIdLow = 0;
 	
 	filterCAN.FilterMode = CAN_FILTERMODE_IDMASK;
@@ -130,20 +130,20 @@ int main(void)
 	HAL_CAN_ConfigFilter(&hcan, &filterCAN);
 	
 	
-	txHeader.DLC = 1;
+	txHeader.DLC = 8;
 	txHeader.IDE = CAN_ID_STD;
 	//txHeader.ExtId = CAN_ID_EXT;
 	txHeader.RTR = CAN_RTR_DATA;
-	txHeader.StdId = 1;
-	//txHeader.TransmitGlobalTime = 1000;
+	txHeader.StdId = 0;
+	txHeader.TransmitGlobalTime = ENABLE;
 	
-	rxHeader.DLC = 1;
+	rxHeader.DLC = 8;
 	rxHeader.RTR = CAN_RTR_DATA;
-	rxHeader.StdId = 1;
+	rxHeader.StdId = 0;
 	rxHeader.IDE = CAN_ID_STD;
 	
 	HAL_CAN_Start(&hcan);
-	HAL_CAN_ActivateNotification(&hcan, 0);
+	HAL_CAN_ActivateNotification(&hcan,  CAN_IT_RX_FIFO0_MSG_PENDING);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -156,13 +156,9 @@ int main(void)
 		pTxMailbox = HAL_CAN_GetTxMailboxesFreeLevel(&hcan);
 		if (HAL_CAN_IsTxMessagePending(&hcan, pTxMailbox) == 0){
 			HAL_CAN_AddTxMessage(&hcan, &txHeader, txData, &pTxMailbox);
-			txData[0]++;
-		}
-		if (HAL_CAN_GetRxFifoFillLevel(&hcan, 0) != 0){
-			HAL_CAN_GetRxMessage(&hcan, 0, &rxHeader, rxData);
 		}
 		HAL_Delay(1000);
-	
+		txData[0]++;
   }
   /* USER CODE END 3 */
 }
@@ -228,7 +224,7 @@ static void MX_CAN_Init(void)
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = DISABLE;
   hcan.Init.AutoWakeUp = DISABLE;
-  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.AutoRetransmission = ENABLE;
   hcan.Init.ReceiveFifoLocked = DISABLE;
   hcan.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan) != HAL_OK)
@@ -272,9 +268,8 @@ static void MX_GPIO_Init(void)
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	}
 	void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
-		
-	
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+		//HAL_CAN_GetRxMessage(*hcan, 0, &rxHeader, rxData);
 	}
 /* USER CODE END 4 */
 
