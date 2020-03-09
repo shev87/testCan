@@ -162,7 +162,7 @@ int main(void)
 			HAL_CAN_GetRxMessage(&hcan, 0, &rxHeader, rxData);
 		}
 		HAL_Delay(1000);
-	//	HAL_CAN_GetRxMessage(&hcan, 0, &rxHeader, rxData);
+	
   }
   /* USER CODE END 3 */
 }
